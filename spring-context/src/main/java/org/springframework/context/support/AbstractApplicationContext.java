@@ -514,6 +514,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 	@Override
 	public void refresh() throws BeansException, IllegalStateException {
+		// 对象锁。通过 FindUsage 可知: refresh()、registerShutdownHook()、close() 不能并行执行
 		synchronized (this.startupShutdownMonitor) {
 			// Prepare this context for refreshing.
 			prepareRefresh();
