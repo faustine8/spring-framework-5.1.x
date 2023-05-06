@@ -950,6 +950,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	protected Object getEarlyBeanReference(String beanName, RootBeanDefinition mbd, Object bean) {
 		Object exposedObject = bean;
 		if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
+			// BeanPostProcessor 说明可以对 Bean 做一些扩展
 			for (BeanPostProcessor bp : getBeanPostProcessors()) {
 				if (bp instanceof SmartInstantiationAwareBeanPostProcessor) {
 					SmartInstantiationAwareBeanPostProcessor ibp = (SmartInstantiationAwareBeanPostProcessor) bp;
@@ -1432,6 +1433,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		if (pvs != null) {
+			// 处理属性依赖
 			applyPropertyValues(beanName, mbd, bw, pvs);
 		}
 	}
@@ -1643,6 +1645,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		MutablePropertyValues mpvs = null;
+		// 对象的属性列表
 		List<PropertyValue> original;
 
 		if (pvs instanceof MutablePropertyValues) {
@@ -1678,8 +1681,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				deepCopy.add(pv);
 			}
 			else {
+				// Bean 对象的属性名称和属性值
 				String propertyName = pv.getName();
 				Object originalValue = pv.getValue();
+				// 如果需要的话，对值进行处理；(也就是获取引用对象的引用值)
 				Object resolvedValue = valueResolver.resolveValueIfNecessary(pv, originalValue);
 				Object convertedValue = resolvedValue;
 				boolean convertible = bw.isWritableProperty(propertyName) &&
