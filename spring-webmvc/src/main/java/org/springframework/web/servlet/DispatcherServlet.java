@@ -492,6 +492,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	 */
 	@Override
 	protected void onRefresh(ApplicationContext context) {
+		// 初始化策略
 		initStrategies(context);
 	}
 
@@ -500,14 +501,23 @@ public class DispatcherServlet extends FrameworkServlet {
 	 * <p>May be overridden in subclasses in order to initialize further strategy objects.
 	 */
 	protected void initStrategies(ApplicationContext context) {
+		// 多文件上传的组件
 		initMultipartResolver(context);
+		// 初始化本地语言环境
 		initLocaleResolver(context);
+		// 初始化模板处理器
 		initThemeResolver(context);
+		// 初始化HandlerMapping
 		initHandlerMappings(context);
+		// 初始化参数适配器
 		initHandlerAdapters(context);
+		// 初始化异常拦截器
 		initHandlerExceptionResolvers(context);
+		// 初始化视图预处理器
 		initRequestToViewNameTranslator(context);
+		// 初始化视图转换器
 		initViewResolvers(context);
+		// 初始化 FlashMap 管理器
 		initFlashMapManager(context);
 	}
 
@@ -591,10 +601,18 @@ public class DispatcherServlet extends FrameworkServlet {
 	 * we default to BeanNameUrlHandlerMapping.
 	 */
 	private void initHandlerMappings(ApplicationContext context) {
+		// 清理环境
 		this.handlerMappings = null;
 
+		/*
+		这个变量默认为 true，也就是如果不改这个默认值就会走 if 里面的内容。可以在 web.xml 中修改这个参数的值。
+
+		默认情况下，SpringMVC 会加载在当前系统中所有实现了 HandlerMapping 接口的 bean，再进行按优先级排序。如果希望 Spring MVC 只加载指定的 HandlerMapping，可以修改 web.xml 中的 DispatcherServlet 的初始化参数，将 `detectAllHandlerMappings` 的值设置为 false。
+		这样，Spring MVC 就只会查找名为 "handlerMapping" 的 bean，并作为当前系统的唯一的 HandlerMapping。所以在此处优先判断 detectAllHandlerMappings 的值，再进行下面内容。
+		*/
 		if (this.detectAllHandlerMappings) {
 			// Find all HandlerMappings in the ApplicationContext, including ancestor contexts.
+			// 根据类型到 IoC 容器中找到所有的 HandlerMapping
 			Map<String, HandlerMapping> matchingBeans =
 					BeanFactoryUtils.beansOfTypeIncludingAncestors(context, HandlerMapping.class, true, false);
 			if (!matchingBeans.isEmpty()) {
@@ -605,6 +623,7 @@ public class DispatcherServlet extends FrameworkServlet {
 		}
 		else {
 			try {
+				// 否则在 IoC 中按照固定名称(BeanId)去找
 				HandlerMapping hm = context.getBean(HANDLER_MAPPING_BEAN_NAME, HandlerMapping.class);
 				this.handlerMappings = Collections.singletonList(hm);
 			}
@@ -616,6 +635,7 @@ public class DispatcherServlet extends FrameworkServlet {
 		// Ensure we have at least one HandlerMapping, by registering
 		// a default HandlerMapping if no other mappings are found.
 		if (this.handlerMappings == null) {
+			// 最后还为空则按照默认策略生成 (一般用户没有自定义 HandlerMapping 组件的情况下都会走到这里吧？)
 			this.handlerMappings = getDefaultStrategies(context, HandlerMapping.class);
 			if (logger.isTraceEnabled()) {
 				logger.trace("No HandlerMappings declared for servlet '" + getServletName() +
@@ -859,12 +879,14 @@ public class DispatcherServlet extends FrameworkServlet {
 	@SuppressWarnings("unchecked")
 	protected <T> List<T> getDefaultStrategies(ApplicationContext context, Class<T> strategyInterface) {
 		String key = strategyInterface.getName();
+		// 获取默认策略的 Properties 配置
 		String value = defaultStrategies.getProperty(key);
 		if (value != null) {
 			String[] classNames = StringUtils.commaDelimitedListToStringArray(value);
 			List<T> strategies = new ArrayList<>(classNames.length);
 			for (String className : classNames) {
 				try {
+					// 实例化 Bean 并添加到容器中和 strategies 中
 					Class<?> clazz = ClassUtils.forName(className, DispatcherServlet.class.getClassLoader());
 					Object strategy = createDefaultStrategy(context, clazz);
 					strategies.add((T) strategy);
@@ -1277,6 +1299,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	protected HandlerAdapter getHandlerAdapter(Object handler) throws ServletException {
 		if (this.handlerAdapters != null) {
 			for (HandlerAdapter adapter : this.handlerAdapters) {
+				// 遍历所有 adapter，看是否支持当前这个 handler
 				if (adapter.supports(handler)) {
 					return adapter;
 				}
