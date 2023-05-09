@@ -1148,6 +1148,7 @@ public class DispatcherServlet extends FrameworkServlet {
 
 		// Did the handler return a view to render?
 		if (mv != null && !mv.wasCleared()) {
+			// 完成渲染
 			render(mv, request, response);
 			if (errorView) {
 				WebUtils.clearErrorRequestAttributes(request);
@@ -1376,10 +1377,13 @@ public class DispatcherServlet extends FrameworkServlet {
 				(this.localeResolver != null ? this.localeResolver.resolveLocale(request) : request.getLocale());
 		response.setLocale(locale);
 
+		// 定义一个视图对象用于封装渲染
 		View view;
+		// 取出视图名
 		String viewName = mv.getViewName();
 		if (viewName != null) {
 			// We need to resolve the view name.
+			// 根据视图名解析封装视图对象
 			view = resolveViewName(viewName, mv.getModelInternal(), locale, request);
 			if (view == null) {
 				throw new ServletException("Could not resolve view with name '" + mv.getViewName() +
@@ -1403,6 +1407,7 @@ public class DispatcherServlet extends FrameworkServlet {
 			if (mv.getStatus() != null) {
 				response.setStatus(mv.getStatus().value());
 			}
+			// 调用 view 对象的 render 方法
 			view.render(mv.getModelInternal(), request, response);
 		}
 		catch (Exception ex) {
@@ -1443,7 +1448,9 @@ public class DispatcherServlet extends FrameworkServlet {
 			Locale locale, HttpServletRequest request) throws Exception {
 
 		if (this.viewResolvers != null) {
+			// 遍历所有视图解析器 (通常只有一个 InternalResourceViewResolver)
 			for (ViewResolver viewResolver : this.viewResolvers) {
+				// 根据初始化的视图解析器, 解析视图
 				View view = viewResolver.resolveViewName(viewName, locale);
 				if (view != null) {
 					return view;

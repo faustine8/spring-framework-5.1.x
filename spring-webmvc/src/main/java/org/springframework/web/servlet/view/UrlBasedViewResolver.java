@@ -472,8 +472,10 @@ public class UrlBasedViewResolver extends AbstractCachingViewResolver implements
 		}
 
 		// Check for special "redirect:" prefix.
+		// 是否需要「重定向」
 		if (viewName.startsWith(REDIRECT_URL_PREFIX)) {
 			String redirectUrl = viewName.substring(REDIRECT_URL_PREFIX.length());
+			// 需要重定向则使用 RedirectView
 			RedirectView view = new RedirectView(redirectUrl,
 					isRedirectContextRelative(), isRedirectHttp10Compatible());
 			String[] hosts = getRedirectHosts();
@@ -484,6 +486,7 @@ public class UrlBasedViewResolver extends AbstractCachingViewResolver implements
 		}
 
 		// Check for special "forward:" prefix.
+		// 是否需要「转发」
 		if (viewName.startsWith(FORWARD_URL_PREFIX)) {
 			String forwardUrl = viewName.substring(FORWARD_URL_PREFIX.length());
 			InternalResourceView view = new InternalResourceView(forwardUrl);
@@ -491,6 +494,7 @@ public class UrlBasedViewResolver extends AbstractCachingViewResolver implements
 		}
 
 		// Else fall back to superclass implementation: calling loadView.
+		// 普通请求调用父类默认的 createView 方法
 		return super.createView(viewName, locale);
 	}
 
@@ -549,6 +553,7 @@ public class UrlBasedViewResolver extends AbstractCachingViewResolver implements
 		Class<?> viewClass = getViewClass();
 		Assert.state(viewClass != null, "No view class");
 
+		// 将逻辑视图名转换为物理视图名
 		AbstractUrlBasedView view = (AbstractUrlBasedView) BeanUtils.instantiateClass(viewClass);
 		view.setUrl(getPrefix() + viewName + getSuffix());
 
@@ -573,6 +578,7 @@ public class UrlBasedViewResolver extends AbstractCachingViewResolver implements
 			view.setExposedContextBeanNames(exposedContextBeanNames);
 		}
 
+		// 完成生成视图对象
 		return view;
 	}
 

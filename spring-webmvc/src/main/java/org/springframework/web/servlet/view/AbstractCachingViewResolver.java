@@ -146,7 +146,9 @@ public abstract class AbstractCachingViewResolver extends WebApplicationObjectSu
 	@Override
 	@Nullable
 	public View resolveViewName(String viewName, Locale locale) throws Exception {
+		// 如果已经生成过视图对象，会缓存起来
 		if (!isCache()) {
+			// 如果没有缓存，直接创建视图
 			return createView(viewName, locale);
 		}
 		else {
@@ -156,12 +158,15 @@ public abstract class AbstractCachingViewResolver extends WebApplicationObjectSu
 				synchronized (this.viewCreationCache) {
 					view = this.viewCreationCache.get(cacheKey);
 					if (view == null) {
+						// 缓存失效了，也创建视图对象
 						// Ask the subclass to create the View object.
+						// 调用父类方法, 创建视图对象 (注意：此时代码虽然写在 AbsXx 这个类中，但是当前执行的时候实际相当于在 InternalXx 类中，所以遇到本类没有的方法会往上找，第一个找到的就是父类 UrlBaseXx 类的方法)
 						view = createView(viewName, locale);
 						if (view == null && this.cacheUnresolved) {
 							view = UNRESOLVED_VIEW;
 						}
 						if (view != null) {
+							// 将视图对象放入缓存中
 							this.viewAccessCache.put(cacheKey, view);
 							this.viewCreationCache.put(cacheKey, view);
 						}
