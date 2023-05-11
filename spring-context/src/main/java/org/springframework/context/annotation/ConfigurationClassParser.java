@@ -164,6 +164,7 @@ class ConfigurationClassParser {
 		for (BeanDefinitionHolder holder : configCandidates) {
 			BeanDefinition bd = holder.getBeanDefinition();
 			try {
+				// 如果是 SpringBoot 项目进来的，bd 其实就是前面主类封装成的 AnnotatedGenericBeanDefinition(AnnotatedBeanDefinition 接口的实现类)
 				if (bd instanceof AnnotatedBeanDefinition) {
 					parse(((AnnotatedBeanDefinition) bd).getMetadata(), holder.getBeanName());
 				}
@@ -183,6 +184,7 @@ class ConfigurationClassParser {
 			}
 		}
 
+		// 加载默认的配置 (对 SpringBoot 项目来说这里就是自动装配的入口了，后面会调用到前面说的导入自动配置类的 getImports 方法)
 		this.deferredImportSelectorHandler.process();
 	}
 
@@ -238,8 +240,10 @@ class ConfigurationClassParser {
 		}
 
 		// Recursively process the configuration class and its superclass hierarchy.
+		// 递归地处理配置类及其父类层次结构。
 		SourceClass sourceClass = asSourceClass(configClass);
 		do {
+			// 递归处理 Bean，如果有父类，递归处理，直到顶层父类
 			sourceClass = doProcessConfigurationClass(configClass, sourceClass);
 		}
 		while (sourceClass != null);
@@ -261,10 +265,12 @@ class ConfigurationClassParser {
 
 		if (configClass.getMetadata().isAnnotated(Component.class.getName())) {
 			// Recursively process any member (nested) classes first
+			// 首先递归处理内部类，(SpringBoot 项目的主类一般没有内部类)
 			processMemberClasses(configClass, sourceClass);
 		}
 
 		// Process any @PropertySource annotations
+		// 针对 @PropertySource 注解的属性配置处理
 		for (AnnotationAttributes propertySource : AnnotationConfigUtils.attributesForRepeatable(
 				sourceClass.getMetadata(), PropertySources.class,
 				org.springframework.context.annotation.PropertySource.class)) {
@@ -278,12 +284,14 @@ class ConfigurationClassParser {
 		}
 
 		// Process any @ComponentScan annotations
+		// 根据 @ComponentScan 注解，扫描项目中的 Bean(SpringBoot 启动类上有该注解)
 		Set<AnnotationAttributes> componentScans = AnnotationConfigUtils.attributesForRepeatable(
 				sourceClass.getMetadata(), ComponentScans.class, ComponentScan.class);
 		if (!componentScans.isEmpty() &&
 				!this.conditionEvaluator.shouldSkip(sourceClass.getMetadata(), ConfigurationPhase.REGISTER_BEAN)) {
 			for (AnnotationAttributes componentScan : componentScans) {
 				// The config class is annotated with @ComponentScan -> perform the scan immediately
+				// 立即执行扫描，(SpringBoot项目为什么是从主类所在的包扫描，这就是关键)
 				Set<BeanDefinitionHolder> scannedBeanDefinitions =
 						this.componentScanParser.parse(componentScan, sourceClass.getMetadata().getClassName());
 				// Check the set of scanned definitions for any further config classes and parse recursively if needed
@@ -292,6 +300,8 @@ class ConfigurationClassParser {
 					if (bdCand == null) {
 						bdCand = holder.getBeanDefinition();
 					}
+					// 检查是否是 ConfigurationClass(是否有 configuration/component 两个注解)，如果是，递归查找该类相关联的配置类。
+					// 所谓相关的配置类，比如 @Configuration 中的 @Bean 定义的 bean。或者在有 @Component 注解的类上继续存在 @Import 注解。
 					if (ConfigurationClassUtils.checkConfigurationClassCandidate(bdCand, this.metadataReaderFactory)) {
 						parse(bdCand.getBeanClassName(), holder.getBeanName());
 					}
@@ -300,6 +310,7 @@ class ConfigurationClassParser {
 		}
 
 		// Process any @Import annotations
+		//递归处理 @Import 注解(SpringBoot 项目中经常用的各种 @EnableXx 注解基本都是封装的 @Import)
 		processImports(configClass, sourceClass, getImports(sourceClass), true);
 
 		// Process any @ImportResource annotations

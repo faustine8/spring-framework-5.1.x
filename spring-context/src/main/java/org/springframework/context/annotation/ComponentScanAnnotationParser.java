@@ -119,6 +119,7 @@ class ComponentScanAnnotationParser {
 		for (Class<?> clazz : componentScan.getClassArray("basePackageClasses")) {
 			basePackages.add(ClassUtils.getPackageName(clazz));
 		}
+		// 根据 declaringClass 获取所在包路径(如果是SpringBoot项目，则参数为主类的全路径名)
 		if (basePackages.isEmpty()) {
 			basePackages.add(ClassUtils.getPackageName(declaringClass));
 		}
@@ -129,6 +130,8 @@ class ComponentScanAnnotationParser {
 				return declaringClass.equals(className);
 			}
 		});
+		// 根据 basePackages 扫描类 (basePackages 集合中只有一个，就是主启动类所在的包路径。)
+		// 为什么只有一个还要用一个集合呢? 因为我们也可以用 @ComponentScan 注解指定扫描路径。
 		return scanner.doScan(StringUtils.toStringArray(basePackages));
 	}
 

@@ -272,6 +272,7 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 		Assert.notEmpty(basePackages, "At least one base package must be specified");
 		Set<BeanDefinitionHolder> beanDefinitions = new LinkedHashSet<>();
 		for (String basePackage : basePackages) {
+			// 从指定的包中扫描需要装载的 Bean (从 basePackage 中扫描类并解析成 BeanDefinition，拿到所有符合条件的类)
 			Set<BeanDefinition> candidates = findCandidateComponents(basePackage);
 			for (BeanDefinition candidate : candidates) {
 				ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(candidate);
@@ -288,7 +289,9 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 					definitionHolder =
 							AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
 					beanDefinitions.add(definitionHolder);
+					// 将该 Bean 注册进 IoC容器(beanDefinitionMap)
 					registerBeanDefinition(definitionHolder, this.registry);
+					// 至此完成了 IoC 容器初始化过程的第二三步，BeanDefinition 的载入和 BeanDefinition 的注册。
 				}
 			}
 		}
