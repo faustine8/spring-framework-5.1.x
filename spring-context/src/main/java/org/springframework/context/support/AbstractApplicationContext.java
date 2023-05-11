@@ -531,6 +531,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			try {
 				// Allows post-processing of the bean factory in context subclasses.
 				// BeanFactory 准备工作完成后进行的后置处理工作 [扩展口]
+				// 在 SpringBoot 中对这个方法实现了扩展，向上下文中添加了一系列的 Bean 的后置处理器。通过这些 Bean 的后置处理器可以修改 BeanDefinition 的属性信息。
 				postProcessBeanFactory(beanFactory);
 
 				// Invoke factory processors registered as beans in the context.
@@ -657,7 +658,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * @see #getBeanFactory()
 	 */
 	protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
+		// 刷新 BeanFactory
 		refreshBeanFactory();
+		// 拿到之前创建的 BeanFactory 对象 (SpringBoot: context = createApplicationContext();)
 		return getBeanFactory();
 	}
 
