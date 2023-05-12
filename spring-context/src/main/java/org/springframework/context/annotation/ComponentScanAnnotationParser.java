@@ -110,6 +110,7 @@ class ComponentScanAnnotationParser {
 		}
 
 		Set<String> basePackages = new LinkedHashSet<>();
+		// 获取包扫描基础路径 (在 SpringBoot 中，默认这个属性是没值的)
 		String[] basePackagesArray = componentScan.getStringArray("basePackages");
 		for (String pkg : basePackagesArray) {
 			String[] tokenized = StringUtils.tokenizeToStringArray(this.environment.resolvePlaceholders(pkg),
@@ -119,7 +120,7 @@ class ComponentScanAnnotationParser {
 		for (Class<?> clazz : componentScan.getClassArray("basePackageClasses")) {
 			basePackages.add(ClassUtils.getPackageName(clazz));
 		}
-		// 根据 declaringClass 获取所在包路径(如果是SpringBoot项目，则参数为主类的全路径名)
+		// 如果为空，则根据 declaringClass 获取所在包路径(如果是SpringBoot项目，则参数为主类的全路径名)
 		if (basePackages.isEmpty()) {
 			basePackages.add(ClassUtils.getPackageName(declaringClass));
 		}
@@ -131,8 +132,8 @@ class ComponentScanAnnotationParser {
 			}
 		});
 		// 根据 basePackages 扫描类 (basePackages 集合中只有一个，就是主启动类所在的包路径。)
-		// 为什么只有一个还要用一个集合呢? 因为我们也可以用 @ComponentScan 注解指定扫描路径。
 		return scanner.doScan(StringUtils.toStringArray(basePackages));
+		// 为什么 basePackages 只有一个元素还要用一个集合呢? 因为我们也可以用 @ComponentScan 注解指定多个扫描路径。
 	}
 
 	private List<TypeFilter> typeFiltersFor(AnnotationAttributes filterAttributes) {

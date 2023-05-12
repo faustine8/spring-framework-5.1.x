@@ -263,6 +263,7 @@ class ConfigurationClassParser {
 	protected final SourceClass doProcessConfigurationClass(ConfigurationClass configClass, SourceClass sourceClass)
 			throws IOException {
 
+		// SpringBoot 启动走到这里，主类上肯定有 @Component 注解，所以能够进入 if 中
 		if (configClass.getMetadata().isAnnotated(Component.class.getName())) {
 			// Recursively process any member (nested) classes first
 			// 首先递归处理内部类，(SpringBoot 项目的主类一般没有内部类)
@@ -301,7 +302,7 @@ class ConfigurationClassParser {
 						bdCand = holder.getBeanDefinition();
 					}
 					// 检查是否是 ConfigurationClass(是否有 configuration/component 两个注解)，如果是，递归查找该类相关联的配置类。
-					// 所谓相关的配置类，比如 @Configuration 中的 @Bean 定义的 bean。或者在有 @Component 注解的类上继续存在 @Import 注解。
+					// 所谓相关的配置类，比如 @Configuration 标注的类中的存在被 @Bean 标注的方法定义的 bean。或者在有 @Component 注解的类上继续存在 @Import 注解。
 					if (ConfigurationClassUtils.checkConfigurationClassCandidate(bdCand, this.metadataReaderFactory)) {
 						parse(bdCand.getBeanClassName(), holder.getBeanName());
 					}
@@ -518,7 +519,9 @@ class ConfigurationClassParser {
 	 * Returns {@code @Import} class, considering all meta-annotations.
 	 */
 	private Set<SourceClass> getImports(SourceClass sourceClass) throws IOException {
+		// 最终要返回的集合，用于存放最终要向容器中导入的组件类
 		Set<SourceClass> imports = new LinkedHashSet<>();
+		// 用于记录是否已经处理过，避免重复处理
 		Set<SourceClass> visited = new LinkedHashSet<>();
 		collectImports(sourceClass, imports, visited);
 		return imports;
@@ -541,8 +544,10 @@ class ConfigurationClassParser {
 			throws IOException {
 
 		if (visited.add(sourceClass)) {
+			// 获取类上的所有注解
 			for (SourceClass annotation : sourceClass.getAnnotations()) {
 				String annName = annotation.getMetadata().getClassName();
+				// 如果注解不是 @Import 就递归查找
 				if (!annName.equals(Import.class.getName())) {
 					collectImports(annotation, imports, visited);
 				}
@@ -779,6 +784,7 @@ class ConfigurationClassParser {
 					DeferredImportSelectorGroupingHandler handler = new DeferredImportSelectorGroupingHandler();
 					deferredImports.sort(DEFERRED_IMPORT_COMPARATOR);
 					deferredImports.forEach(handler::register);
+					// 处理导入
 					handler.processGroupImports();
 				}
 			}
@@ -807,6 +813,7 @@ class ConfigurationClassParser {
 
 		public void processGroupImports() {
 			for (DeferredImportSelectorGrouping grouping : this.groupings.values()) {
+				// 调用 grouping 的方法
 				grouping.getImports().forEach(entry -> {
 					ConfigurationClass configurationClass = this.configurationClasses.get(entry.getMetadata());
 					try {
