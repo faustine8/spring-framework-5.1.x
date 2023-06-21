@@ -224,7 +224,7 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
 			try {
 				// 统一加载转换为Resource资源对象
 				Resource[] resources = ((ResourcePatternResolver) resourceLoader).getResources(location);
-				// 加载资源中配置的BeanDefinition对象，并返回数量
+				// 加载资源中配置的 BeanDefinition 对象，并返回数量
 				int count = loadBeanDefinitions(resources);
 				if (actualResources != null) {
 					Collections.addAll(actualResources, resources);
